@@ -1,57 +1,66 @@
-# 🌐 Motor de Geometría Hiperdimensional 12D
+# Motor de Geometría Hiperdimensional 12D
 
-> **Resumen del Sistema:** Este script genera un politopo cruzado (*Cross-Polytope*) en un espacio de 12 dimensiones, aplica rotaciones entrelazadas simultáneas a través de múltiples hiperplanos, lo colapsa mediante una proyección en cascada con perspectiva real hasta 3D, y lo renderiza de manera optimizada usando **NumPy** y **Matplotlib** en **Linux Mint**.
-
----
-
-## 🛠️ 1. El Entorno: Linux Mint + Python
-
-Linux Mint destaca por su bajo consumo de recursos de escritorio (Cinnamon / XFCE / MATE) y su excelente gestión del kernel para tareas científicas y de procesamiento en Python.
-
-* **NumPy:** Se encarga de la vectorización matemática masiva y las transformaciones matriciales de alta velocidad necesarias para manipular 12 dimensiones simultáneamente sin cuellos de botella.
-* **Matplotlib (`FuncAnimation`):** Gestiona el bucle de renderizado gráfico a 60 FPS, proyectando la malla 3D final de manera fluida mediante la técnica de separación por `np.nan` en las líneas.
+**Resumen del Sistema:** Este software genera un politopo cruzado (*Cross-Polytope*) en un espacio de 12 dimensiones, aplica rotaciones entrelazadas simultáneas a través de múltiples hiperplanos, colapsa la estructura mediante una proyección en cascada con perspectiva espacial hasta 3D y ejecuta el renderizado continuo utilizando **NumPy** y **Matplotlib** sobre el sistema operativo **Linux Mint**.
 
 ---
 
-## 📐 2. Anatomía del Código (Paso a Paso)
+## Demostración Visual
+
+### Imagen de Rendimiento
+![Demostración del Renderizado 12D](bitmap.png)
+
+### Video de Animación en Tiempo Real
+<video src="2026-10-30 20-17-31.mp4" controls width="100%"></video>
+
+---
+
+## 1. Entorno de Ejecución: Linux Mint + Python
+
+La combinación del entorno Linux Mint y el intérprete Python permite un procesamiento eficiente con un consumo reducido de recursos del sistema:
+
+* **NumPy:** Gestiona la vectorización matemática masiva y las transformaciones matriciales requeridas para operar en espacios de 12 dimensiones sin generar cuellos de botella en la memoria.
+* **Matplotlib (`FuncAnimation`):** Administra el bucle de renderizado gráfico a 60 FPS, proyectando la malla 3D mediante la técnica de separación de aristas por valores `np.nan`.
+
+---
+
+## 2. Arquitectura Matemática y Modular
 
 ### A. Creación del Hiper-Politopo (12D)
 ```python
 DIMENSIONES = 12
 ```
-* **Vértices (24 puntos):** En un *Cross-Polytope* de 12D, existen 12 ejes ortogonales. Cada eje tiene un polo positivo ($+2.0$) y uno negativo ($-2.0$), lo que resulta exactamente en $12 \times 2 = 24$ vértices simétricos puros.
-* **Aristas Hiper-Cristalinas:** Se evalúan todas las combinaciones posibles entre los 24 vértices. Se conectan todos con todos, **excepto** los polos opuestos directos (`-vertices[j]`), formando una red cristalina sumamente densa y estructurada.
+* **Vértices (24 Puntos):** En un *Cross-Polytope* de 12D existen 12 ejes ortogonales. Cada eje cuenta con un polo positivo ($+2.0$) y uno negativo ($-2.0$), generando exactamente $12 \times 2 = 24$ vértices ortogonales.
+* **Aristas Hiper-Cristalinas:** Se interconectan todos los vértices entre sí, a excepción de los polos opuestos directos (`-vertices[j]`), estructurando una red hiperdimensional completa.
 
 ### B. Rotación Entrelazada en Hiperplanos
-La función `rotacion_hiperdimensional` es el corazón del movimiento:
-* En lugar de rotar en un solo plano (como en 3D), el script recorre las dimensiones de 2 en 2 (`range(0, DIMENSIONES - 1, 2)`).
-* A cada plano hiperdimensional se le asigna un **factor de velocidad único** (`1.0 + (d * 0.15)`). Esto evita que la figura rote de forma rígida o predecible, generando un caos ordenado y orgánico de rotación multidimensional simultánea.
+La función `rotacion_hiperdimensional` realiza la transformación angular:
+* Recorre los pares de dimensiones consecutivas (`range(0, DIMENSIONES - 1, 2)`).
+* Asigna a cada hiperplano un factor de velocidad incremental (`1.0 + (d * 0.15)`), produciendo una rotación asíncrona continua a través de múltiples planos espaciales.
 
-### C. Proyección en Cascada (De 12D a 3D)
-El mayor desafío de visualizar 12D en una pantalla de computadora es la pérdida de dimensiones. El script resuelve esto con una **reducción dimensional progresiva**:
-* Un bucle inverso (`for d in range(DIMENSIONES - 1, 2, -1)`) reduce la figura paso a paso: de 12D a 11D, a 10D... hasta llegar a 3D.
-* En cada paso, aplica un factor de **perspectiva espacial** (`distancia / (distancia - puntos_actuales[:, d] * 0.6)`), lo que simula profundidad real para que los vértices lejanos se vean más pequeños y se eviten distorsiones extremas (asíntotas).
+### C. Proyección en Cascada (12D a 3D)
+El algoritmo implementa una reducción dimensional progresiva:
+* Mediante un ciclo descendente (`for d in range(DIMENSIONES - 1, 2, -1)`), colapsa secuencialmente cada dimensión desde 12D hasta 3D.
+* Aplica un factor de perspectiva espacial (`distancia / (distancia - puntos_actuales[:, d] * 0.6)`), previniendo asíntotas y preservando la percepción de profundidad visual.
 
-### D. Renderizado de Alto Rendimiento
-Para evitar dibujar miles de líneas una por una (lo que congelaría cualquier gráfico):
-* Se utiliza una **estrategia de vectorización masiva**: todas las coordenadas de las aristas se agrupan en tres grandes listas (`xs`, `ys`, `zs`).
-* Se utiliza `np.nan` para separar los trazos de las aristas individuales dentro de una sola línea continua (`ax.plot`), permitiendo que Matplotlib dibuje toda la malla cristalina (en color Cian Neón `#00ffcc`) en un solo ciclo de CPU por fotograma.
+### D. Optimización del Renderizado
+* **Vectorización:** Las coordenadas de los vértices y aristas se empaquetan en arreglos lineales (`xs`, `ys`, `zs`).
+* **Delimitación por NaN:** Se intercalan valores `np.nan` para dibujar la totalidad de las aristas mediante una única llamada al método `ax.plot`, maximizando el rendimiento por fotograma.
 
 ---
 
-## 💻 3. Código Fuente Principal (`dodecaracto.py`)
+## 3. Código Fuente Principal (`dodecaracto.py`)
 
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-# 👑 NUEVA CONFIGURACIÓN: EQUILIBRIO PERFECTO 12D 👑
+# Configuración dimensional
 DIMENSIONES = 12  
 
-print(f"🚀 Iniciando motor en {DIMENSIONES}D. Visualizando la geometría pura del hiperespacio.")
+print(f"Iniciando motor en {DIMENSIONES}D. Procesando geometría del hiperespacio.")
 
-# 1. Generamos el Cross-Polytope completo en 12D (24 vértices perfectamente simétricos)
+# 1. Generación del Cross-Polytope en 12D (24 vértices)
 base_vertices = []
 for i in range(DIMENSIONES):
     v1 = np.zeros(DIMENSIONES)
@@ -62,19 +71,17 @@ for i in range(DIMENSIONES):
     base_vertices.append(v2)
 vertices = np.array(base_vertices, dtype=float)
 
-# 2. Conectar aristas (Estructura hiper-cristalina limpia)
+# 2. Definición de aristas (conexión entre ejes no opuestos)
 edges = []
 num_vertices = len(vertices)
 for i in range(num_vertices):
     for j in range(i + 1, num_vertices):
-        # Conectamos todos los ejes excepto polos opuestos directos
         if not np.allclose(vertices[i], -vertices[j]):
             edges.append((i, j))
 
-# 3. Rotación entrelazada en múltiples hiperplanos de la 12va dimensión
+# 3. Transformación matricial de rotación multidimensional
 def rotacion_hiperdimensional(points, angulo):
     R = np.copy(points)
-    # Hacemos rotar pares de dimensiones consecutivas a diferentes velocidades
     for d in range(0, DIMENSIONES - 1, 2):
         factor_velocidad = 1.0 + (d * 0.15)
         c = np.cos(angulo * factor_velocidad)
@@ -87,41 +94,33 @@ def rotacion_hiperdimensional(points, angulo):
         R[:, d + 1] = eje_x * s + eje_y * c
     return R
 
-# 4. Proyección en cascada controlada (Desde 12D hasta 3D con perspectiva real)
+# 4. Proyección en cascada progresiva (12D -> 3D)
 def proyeccion_12d_a_3d(points, distancia=4.0):
     puntos_actuales = np.copy(points)
-    
-    # Colapsamos el hiperespacio de la dimensión 11 bajando consecutivamente hasta la 3
     for d in range(DIMENSIONES - 1, 2, -1):
-        # Distancia de seguridad para evitar que las asíntotas rompan la figura
         factor = distancia / (distancia - puntos_actuales[:, d] * 0.6)
         puntos_actuales = puntos_actuales[:, :d] * factor[:, None]
-        
     return puntos_actuales
 
-# 5. Escena Gráfica limpia
+# 5. Inicialización del lienzo tridimensional
 fig = plt.figure(figsize=(9, 9))
 ax = fig.add_subplot(111, projection='3d')
 plt.title(f"Hiper-Malla Cristalina de {DIMENSIONES} Dimensiones ({len(edges)} aristas)")
 
-# Límites estables para apreciar la profundidad
 ax.set_xlim([-3, 3])
 ax.set_ylim([-3, 3])
 ax.set_zlim([-3, 3])
 ax.axis('off')
 
-# Línea ultra fluida indexada por NaNs en color Cian Neón
 line, = ax.plot([], [], [], color='#00ffcc', alpha=0.5, lw=1.0)
 
-# 6. Animación principal a 60 FPS
+# 6. Actualización por fotograma
 def update(frame):
     angulo = frame * 0.015
     
-    # Rotar en el hiperespacio profundo y colapsar a la pantalla
     rotated = rotacion_hiperdimensional(vertices, angulo)
     projected = proyeccion_12d_a_3d(rotated)
     
-    # Vectorización masiva instantánea
     xs, ys, zs = [], [], []
     for i, j in edges:
         xs.extend([projected[i, 0], projected[j, 0], np.nan])
@@ -131,38 +130,33 @@ def update(frame):
     line.set_data(xs, ys)
     line.set_3d_properties(zs)
     
-    # Suave paneo de cámara para añadir sensación de volumen tridimensional
     ax.view_init(elev=20 + np.sin(frame * 0.03) * 5, azim=frame * 0.4)
     return line,
 
-# Ejecución de alto rendimiento
 ani = FuncAnimation(fig, update, frames=360, interval=20, blit=True)
 plt.show()
 ```
 
 ---
 
-## 🚀 4. Guía de Instalación y Ejecución en Linux Mint
+## 4. Instrucciones de Ejecución
 
-Para ejecutar este motor hiperdimensional desde la consola de Linux Mint:
-
-1. **Abrir la terminal:**
+1. Abrir la terminal de comandos:
    ```bash
    Ctrl + Alt + T
    ```
 
-2. **Instalar dependencias necesarias:**
+2. Instalar las librerías requeridas:
    ```bash
    pip install numpy matplotlib
    ```
 
-3. **Crear el archivo del script:**
+3. Crear el archivo del programa:
    ```bash
    nano dodecaracto.py
    ```
-   *(Pega el código fuente anterior, guarda presionado `Ctrl + O`, presiona `Enter` y sal con `Ctrl + X`)*.
 
-4. **Ejecutar el programa:**
+4. Ejecutar el script:
    ```bash
    python3 dodecaracto.py
-   ```# Dodecaracto-
+   ```
